@@ -20,7 +20,7 @@ func main() {
 		chromedp.WaitVisible(`#username`, chromedp.ByID),
 		chromedp.SendKeys(`#username`, "admin", chromedp.ByID),
 		chromedp.WaitVisible(`#password`, chromedp.ByID),
-		chromedp.SendKeys(`#password`, "xxxxx", chromedp.ByID),
+		chromedp.SendKeys(`#password`, "xxx", chromedp.ByID),
 		chromedp.Evaluate(`doLogin()`, nil), // Trigger the doLogin function
 		chromedp.ActionFunc(func(ctx context.Context) error {
 		    // Custom action to wait for the element with ID "UE_table" to exist
