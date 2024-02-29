@@ -1,5 +1,4 @@
 python3
-bs4/inventory
-bs4/table_data.log
+wall-e/files/*
 gocolly/2024*
 gocolly/go*
