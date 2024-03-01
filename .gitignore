@@ -2,3 +2,4 @@ python3
 wall-e/files/*
 gocolly/2024*
 gocolly/go*
+**.bin
