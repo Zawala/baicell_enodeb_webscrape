@@ -5,6 +5,8 @@ import logging
 import json
 import os
 import configparser
+from datetime import datetime
+
 
 config = configparser.ConfigParser()
 config.read('config.cfg')
@@ -18,12 +20,9 @@ if not os.path.exists(inventory_file_path):
     with open(inventory_file_path, 'w') as f:
         f.write('') # You can write initial content here if needed
 
-# Check if the log file exists and create it if it doesn't
-if not os.path.exists(log_file_path):
-    with open(log_file_path, 'w') as f:
-        f.write('') 
 
-logging.basicConfig(filename=log_file_path, level=logging.INFO, format='%(asctime)s - %(message)s')
+log_file = f"{log_file_path}{datetime.now().strftime('%Y%m%d')}-table_data.log"
+logging.basicConfig(filename=log_file, level=logging.INFO, format='%(asctime)s - %(message)s')
 
 async def scrape(url,username,password):
     print(url,username,password)
