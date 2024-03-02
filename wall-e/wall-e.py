@@ -6,6 +6,8 @@ import json
 import os
 import configparser
 from datetime import datetime
+import schedule
+import time
 
 
 config = configparser.ConfigParser()
@@ -79,8 +81,7 @@ async def scrape(url,username,password):
         await browser.close()
 
 
-
-if __name__ == "__main__":
+def rinnegan():
     with open(inventory_file_path, 'r') as file:
         inventory_data = json.load(file)
 
@@ -95,3 +96,9 @@ if __name__ == "__main__":
             super_total_count_enodeb+=total_count_enodeb
 
     logging.info(f'Total connected clients: {super_total_count_enodeb}')
+
+if __name__ == "__main__":
+    schedule.every(20).minutes.do(rinnegan)
+    while True:
+        schedule.run_pending()
+        time.sleep(1)
