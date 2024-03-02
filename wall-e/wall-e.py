@@ -70,7 +70,8 @@ async def scrape(url,username,password):
             row_dict = dict(zip(keys, row_data))
             # Log the dictionary directly
             logging.info(row_dict)
-
+        count_enodeb=(len(table.find_all('tr')) - 1)
+        return count_enodeb
     except Exception as e:
         logging.error(f"An error occurred while scraping {url}: {e}")
 
@@ -84,8 +85,13 @@ if __name__ == "__main__":
         inventory_data = json.load(file)
 
     # Iterate over each site in the inventory
+    super_total_count_enodeb=0
     for site in inventory_data['sites']:
         url = site['url']
         username = site['username']
         password = site['password']
-        asyncio.get_event_loop().run_until_complete(scrape(url,username,password))
+        total_count_enodeb=asyncio.get_event_loop().run_until_complete(scrape(url,username,password))
+        if total_count_enodeb:
+            super_total_count_enodeb+=total_count_enodeb
+
+    logging.info(f'Total connected clients: {super_total_count_enodeb}')
