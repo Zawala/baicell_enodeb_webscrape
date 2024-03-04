@@ -23,10 +23,10 @@ if not os.path.exists(inventory_file_path):
         f.write('') # You can write initial content here if needed
 
 
-log_file = f"{log_file_path}{datetime.now().strftime('%Y%m%d')}-table_data.log"
-logging.basicConfig(filename=log_file, level=logging.INFO, format='%(asctime)s - %(message)s')
 
 async def scrape(url,username,password):
+    log_file = f"{log_file_path}{datetime.now().strftime('%Y%m%d')}-table_data.log"
+    logging.basicConfig(filename=log_file, level=logging.INFO, format='%(asctime)s - %(message)s')
     print(url,username,password)
     browser = await launch(headless=True)
     page = await browser.newPage()
