@@ -7,6 +7,7 @@ import os
 import configparser
 from datetime import datetime
 import schedule
+from urllib.parse import urlparse
 import time
 
 
@@ -71,7 +72,8 @@ async def scrape(url,username,password):
             # Create a dictionary for each row, using the keys as keys
             row_dict = dict(zip(keys, row_data))
             # Log the dictionary directly
-            logging.info(row_dict)
+            parsed_url = urlparse(url)
+            logging.info(f'{parsed_url.hostname}:{row_dict}')
         count_enodeb=(len(table.find_all('tr')) - 1)
         return count_enodeb
     except Exception as e:
