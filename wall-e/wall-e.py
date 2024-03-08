@@ -106,7 +106,7 @@ def rinnegan():
     logging.info(f'Total connected clients: {super_total_count_enodeb}')
 
 if __name__ == "__main__":
-    schedule.every(2).minutes.do(rinnegan)
+    schedule.every(60).minutes.do(rinnegan)
     while True:
         schedule.run_pending()
         time.sleep(1)
