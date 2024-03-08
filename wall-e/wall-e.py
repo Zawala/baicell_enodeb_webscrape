@@ -93,7 +93,7 @@ async def scrape(url,username,password):
             row_dict = dict(zip(keys, row_data))
             # Log the dictionary directly
             parsed_url = urlparse(url)
-            logging.info(f'{parsed_url.hostname}:{row_dict}')
+            logger.info(f'{parsed_url.hostname}:{row_dict}')
         count_enodeb=(len(table.find_all('tr')) - 1)
         return count_enodeb
     except Exception as e:
@@ -117,10 +117,10 @@ def rinnegan():
         if total_count_enodeb:
             super_total_count_enodeb+=total_count_enodeb
 
-    logging.info(f'Total connected clients: {super_total_count_enodeb}')
+    general_logger.info(f'Total connected clients: {super_total_count_enodeb}')
 
 if __name__ == "__main__":
-    schedule.every(60).minutes.do(rinnegan)
+    schedule.every(1).minutes.do(rinnegan)
     while True:
         schedule.run_pending()
         time.sleep(1)
