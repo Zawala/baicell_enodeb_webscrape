@@ -12,7 +12,7 @@ import time
 
 
 config = configparser.ConfigParser()
-config.read('config.cfg')
+config.read('/home/kelvin/wall-e/config.cfg')
 
 # Get the paths from the configuration file
 inventory_file_path = config.get('DEFAULT', 'inventory_file')
@@ -23,11 +23,17 @@ if not os.path.exists(inventory_file_path):
     with open(inventory_file_path, 'w') as f:
         f.write('') # You can write initial content here if needed
 
-
+def log_message(message):
+    # Update the log file path based on the current date
+    log_file = f"{log_file_path}{datetime.now().strftime('%Y%m%d')}-table_data.log"
+    
+    # Configure the logging system for this log message
+    logging.basicConfig(filename=log_file, level=logging.INFO, format='%(asctime)s - %(message)s')
+    
+    # Log the message
+    logging.info(message)
 
 async def scrape(url,username,password):
-    log_file = f"{log_file_path}{datetime.now().strftime('%Y%m%d')}-table_data.log"
-    logging.basicConfig(filename=log_file, level=logging.INFO, format='%(asctime)s - %(message)s')
     print(url,username,password)
     browser = await launch(headless=True)
     page = await browser.newPage()
@@ -73,7 +79,7 @@ async def scrape(url,username,password):
             row_dict = dict(zip(keys, row_data))
             # Log the dictionary directly
             parsed_url = urlparse(url)
-            logging.info(f'{parsed_url.hostname}:{row_dict}')
+            log_message(f'{parsed_url.hostname}:{row_dict}')
         count_enodeb=(len(table.find_all('tr')) - 1)
         return count_enodeb
     except Exception as e:
@@ -100,7 +106,7 @@ def rinnegan():
     logging.info(f'Total connected clients: {super_total_count_enodeb}')
 
 if __name__ == "__main__":
-    schedule.every(60).minutes.do(rinnegan)
+    schedule.every(2).minutes.do(rinnegan)
     while True:
         schedule.run_pending()
         time.sleep(1)
