@@ -12,7 +12,7 @@ import time
 
 
 config = configparser.ConfigParser()
-config.read('config.cfg')
+config.read('/home/kelvin/wall-e/config.cfg')
 
 # Get the paths from the configuration file
 inventory_file_path = config.get('DEFAULT', 'inventory_file')
@@ -22,13 +22,33 @@ log_file_path = config.get('DEFAULT', 'log_file')
 if not os.path.exists(inventory_file_path):
     with open(inventory_file_path, 'w') as f:
         f.write('') # You can write initial content here if needed
+general_logger = logging.getLogger('general')
+general_logger.setLevel(logging.WARNING)
+log_file = f"{log_file_path}{datetime.now().strftime('%Y%m%d')}-general.log"
+file_handler = logging.FileHandler(log_file)
+file_handler.setLevel(logging.WARNING)
+formatter = logging.Formatter('%(asctime)s - %(message)s')
+file_handler.setFormatter(formatter)
+general_logger.addHandler(file_handler)
 
-
-log_file = f"{log_file_path}{datetime.now().strftime('%Y%m%d')}-table_data.log"
-logging.basicConfig(filename=log_file, level=logging.INFO, format='%(asctime)s - %(message)s')
 
 async def scrape(url,username,password):
-    print(url,username,password)
+    logger = logging.getLogger(f"scrape_{datetime.now().strftime('%Y%m%d')}")
+    logger.setLevel(logging.INFO)
+    
+    # Create a file handler for the logger
+    log_file = f"{log_file_path}{datetime.now().strftime('%Y%m%d')}-table_data.log"
+    file_handler = logging.FileHandler(log_file)
+    file_handler.setLevel(logging.INFO)
+    
+    # Create a formatter and add it to the handler
+    formatter = logging.Formatter('%(asctime)s - %(message)s')
+    file_handler.setFormatter(formatter)
+    
+    # Add the handler to the logger
+    logger.addHandler(file_handler)
+    
+    # Now you can use logger.info() to log messages
     browser = await launch(headless=True)
     page = await browser.newPage()
     await page.setViewport({'width': 550, 'height': 976})
@@ -83,8 +103,7 @@ async def scrape(url,username,password):
         await browser.close()
 
 
-
-if __name__ == "__main__":
+def rinnegan():
     with open(inventory_file_path, 'r') as file:
         inventory_data = json.load(file)
 
@@ -99,3 +118,9 @@ if __name__ == "__main__":
             super_total_count_enodeb+=total_count_enodeb
 
     logging.info(f'Total connected clients: {super_total_count_enodeb}')
+
+if __name__ == "__main__":
+    schedule.every(60).minutes.do(rinnegan)
+    while True:
+        schedule.run_pending()
+        time.sleep(1)
