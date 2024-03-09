@@ -23,15 +23,57 @@ if not os.path.exists(inventory_file_path):
     with open(inventory_file_path, 'w') as f:
         f.write('') # You can write initial content here if needed
 
+
+def log_warnings(message):
+    # Update the log file path based on the current date
+    log_file = f"{log_file_path}{datetime.now().strftime('%Y%m%d')}-general.log"
+    
+    # Create a logger
+    logger = logging.getLogger(__name__)
+    logger.setLevel(logging.WARNING)
+    
+    # Create a file handler which logs even debug messages
+    fh = logging.FileHandler(log_file)
+    fh.setLevel(logging.INFO)
+    
+    # Create formatter and add it to the handlers
+    formatter = logging.Formatter('%(asctime)s - %(message)s')
+    fh.setFormatter(formatter)
+    
+    # Add the handlers to the logger
+    logger.addHandler(fh)
+    
+    # Log the message
+    logger.warning(message)
+    
+    # Remove the handler to avoid logging to the same file in subsequent calls
+    logger.removeHandler(fh)
+
 def log_message(message):
     # Update the log file path based on the current date
     log_file = f"{log_file_path}{datetime.now().strftime('%Y%m%d')}-table_data.log"
     
-    # Configure the logging system for this log message
-    logging.basicConfig(filename=log_file, level=logging.INFO, format='%(asctime)s - %(message)s')
+    # Create a logger
+    logger = logging.getLogger(__name__)
+    logger.setLevel(logging.INFO)
+    
+    # Create a file handler which logs even debug messages
+    fh = logging.FileHandler(log_file)
+    fh.setLevel(logging.INFO)
+    
+    # Create formatter and add it to the handlers
+    formatter = logging.Formatter('%(asctime)s - %(message)s')
+    fh.setFormatter(formatter)
+    
+    # Add the handlers to the logger
+    logger.addHandler(fh)
     
     # Log the message
-    logging.info(message)
+    logger.info(message)
+    
+    # Remove the handler to avoid logging to the same file in subsequent calls
+    logger.removeHandler(fh)
+
 
 async def scrape(url,username,password):
     print(url,username,password)
@@ -80,10 +122,11 @@ async def scrape(url,username,password):
             # Log the dictionary directly
             parsed_url = urlparse(url)
             log_message(f'{parsed_url.hostname}:{row_dict}')
+
         count_enodeb=(len(table.find_all('tr')) - 1)
         return count_enodeb
     except Exception as e:
-        logging.error(f"An error occurred while scraping {url}: {e}")
+       log_warnings(f"An error occurred while scraping {url}: {e}")
 
     finally:
         await browser.close()
@@ -103,7 +146,7 @@ def rinnegan():
         if total_count_enodeb:
             super_total_count_enodeb+=total_count_enodeb
 
-    logging.info(f'Total connected clients: {super_total_count_enodeb}')
+    log_message(f'Total connected clients: {super_total_count_enodeb}')
 
 if __name__ == "__main__":
     schedule.every(60).minutes.do(rinnegan)
