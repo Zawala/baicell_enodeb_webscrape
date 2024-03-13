@@ -75,15 +75,13 @@ def log_message(message):
     logger.removeHandler(fh)
 
 
-async def scrape(url,username,password):
-    print(url,username,password)
-    browser = await launch(headless=True)
+async def scrape(browser, url, username, password):
     page = await browser.newPage()
     await page.setViewport({'width': 550, 'height': 976})
 
     try:
         # Navigate to the URL
-        await page.goto(url, timeout=60000)
+        await page.goto(url, timeout=15000)
 
         # Interact with elements
         await page.evaluate('document.querySelector("#username").value = "";')
@@ -127,29 +125,36 @@ async def scrape(url,username,password):
         return count_enodeb
     except Exception as e:
        log_warnings(f"An error occurred while scraping {url}: {e}")
+       return 0
 
     finally:
-        await browser.close()
+        await page.close()
 
 
-def rinnegan():
+async def rinnegan():
     with open(inventory_file_path, 'r') as file:
         inventory_data = json.load(file)
 
-    # Iterate over each site in the inventory
-    super_total_count_enodeb=0
+    browser = await launch(headless=True)
+    tasks = []
     for site in inventory_data['sites']:
         url = site['url']
         username = site['username']
         password = site['password']
-        total_count_enodeb=asyncio.get_event_loop().run_until_complete(scrape(url,username,password))
-        if total_count_enodeb:
-            super_total_count_enodeb+=total_count_enodeb
+        tasks.append(scrape(browser, url, username, password))
+
+    results = await asyncio.gather(*tasks, return_exceptions=True)
+    # Handle exceptions in results if necessary
+
+    # Calculate the total count of enodeb
+    super_total_count_enodeb = sum(results)
 
     log_message(f'Total connected clients: {super_total_count_enodeb}')
+    # Close the browser after all tasks are completed
+    await browser.close()
 
 if __name__ == "__main__":
-    schedule.every(60).minutes.do(rinnegan)
+    schedule.every(5).minutes.do(rinnegan)
     while True:
         schedule.run_pending()
         time.sleep(1)
