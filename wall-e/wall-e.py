@@ -6,9 +6,7 @@ import json
 import os
 import configparser
 from datetime import datetime
-import schedule
 from urllib.parse import urlparse
-import time
 
 
 config = configparser.ConfigParser()
@@ -22,34 +20,62 @@ log_file_path = config.get('DEFAULT', 'log_file')
 if not os.path.exists(inventory_file_path):
     with open(inventory_file_path, 'w') as f:
         f.write('') # You can write initial content here if needed
-general_logger = logging.getLogger('general')
-general_logger.setLevel(logging.WARNING)
-log_file = f"{log_file_path}{datetime.now().strftime('%Y%m%d')}-general.log"
-file_handler = logging.FileHandler(log_file)
-file_handler.setLevel(logging.WARNING)
-formatter = logging.Formatter('%(asctime)s - %(message)s')
-file_handler.setFormatter(formatter)
-general_logger.addHandler(file_handler)
 
 
-async def scrape(url,username,password):
-    logger = logging.getLogger(f"scrape_{datetime.now().strftime('%Y%m%d')}")
+def log_warnings(message):
+    # Update the log file path based on the current date
+    log_file = f"{log_file_path}{datetime.now().strftime('%Y%m%d')}-general.log"
+    
+    # Create a logger
+    logger = logging.getLogger(__name__)
+    logger.setLevel(logging.WARNING)
+    
+    # Create a file handler which logs even debug messages
+    fh = logging.FileHandler(log_file)
+    fh.setLevel(logging.INFO)
+    
+    # Create formatter and add it to the handlers
+    formatter = logging.Formatter('%(asctime)s - %(message)s')
+    fh.setFormatter(formatter)
+    
+    # Add the handlers to the logger
+    logger.addHandler(fh)
+    
+    # Log the message
+    logger.warning(message)
+    
+    # Remove the handler to avoid logging to the same file in subsequent calls
+    logger.removeHandler(fh)
+
+def log_message(message):
+    # Update the log file path based on the current date
+    log_file = f"{log_file_path}{datetime.now().strftime('%Y%m%d')}-table_data.log"
+    
+    # Create a logger
+    logger = logging.getLogger(__name__)
     logger.setLevel(logging.INFO)
     
-    # Create a file handler for the logger
-    log_file = f"{log_file_path}{datetime.now().strftime('%Y%m%d')}-table_data.log"
-    file_handler = logging.FileHandler(log_file)
-    file_handler.setLevel(logging.INFO)
+    # Create a file handler which logs even debug messages
+    fh = logging.FileHandler(log_file)
+    fh.setLevel(logging.INFO)
     
-    # Create a formatter and add it to the handler
+    # Create formatter and add it to the handlers
     formatter = logging.Formatter('%(asctime)s - %(message)s')
-    file_handler.setFormatter(formatter)
+    fh.setFormatter(formatter)
     
-    # Add the handler to the logger
-    logger.addHandler(file_handler)
+    # Add the handlers to the logger
+    logger.addHandler(fh)
     
-    # Now you can use logger.info() to log messages
-    browser = await launch(headless=True)
+    # Log the message
+    logger.info(message)
+    
+    # Remove the handler to avoid logging to the same file in subsequent calls
+    logger.removeHandler(fh)
+
+
+
+
+async def scrape(browser, url, username, password):
     page = await browser.newPage()
     await page.setViewport({'width': 550, 'height': 976})
 
@@ -93,34 +119,42 @@ async def scrape(url,username,password):
             row_dict = dict(zip(keys, row_data))
             # Log the dictionary directly
             parsed_url = urlparse(url)
-            logger.info(f'{parsed_url.hostname}:{row_dict}')
+            log_message(f'{parsed_url.hostname}:{row_dict}')
         count_enodeb=(len(table.find_all('tr')) - 1)
-        return count_enodeb
+        return count_enodeb if count_enodeb else 0
     except Exception as e:
-        logging.error(f"An error occurred while scraping {url}: {e}")
+        log_warnings(f"An error occurred while scraping {url}: {e}")
+        return 0
 
     finally:
-        await browser.close()
+        await page.close()
 
 
-def rinnegan():
+
+async def rinnegan():
     with open(inventory_file_path, 'r') as file:
         inventory_data = json.load(file)
 
-    # Iterate over each site in the inventory
-    super_total_count_enodeb=0
+    browser = await launch(headless=True)
+    tasks = []
     for site in inventory_data['sites']:
         url = site['url']
         username = site['username']
         password = site['password']
-        total_count_enodeb=asyncio.get_event_loop().run_until_complete(scrape(url,username,password))
-        if total_count_enodeb:
-            super_total_count_enodeb+=total_count_enodeb
+        tasks.append(scrape(browser, url, username, password))
 
-    general_logger.info(f'Total connected clients: {super_total_count_enodeb}')
+    results = await asyncio.gather(*tasks, return_exceptions=True)
+    # Handle exceptions in results if necessary
+
+    # Calculate the total count of enodeb
+    super_total_count_enodeb = sum(results)
+
+    log_message(f'Total connected clients: {super_total_count_enodeb}')
+    # Close the browser after all tasks are completed
+    await browser.close()
+
+
+
 
 if __name__ == "__main__":
-    schedule.every(60).minutes.do(rinnegan)
-    while True:
-        schedule.run_pending()
-        time.sleep(1)
+    asyncio.run(rinnegan())
