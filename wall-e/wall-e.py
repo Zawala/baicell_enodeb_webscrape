@@ -62,7 +62,7 @@ def log_message(message):
     fh.setLevel(logging.INFO)
     
     # Create formatter and add it to the handlers
-    formatter = logging.Formatter('%(asctime)s - %(message)s')
+    formatter = logging.Formatter('%(message)s')
     fh.setFormatter(formatter)
     
     # Add the handlers to the logger
@@ -120,7 +120,11 @@ async def scrape(browser, url,username,password):
             row_dict = dict(zip(keys, row_data))
             # Log the dictionary directly
             parsed_url = urlparse(url)
-            log_message(f'{parsed_url.hostname}:{row_dict}')
+            json_message=json.dumps({'host':parsed_url.hostname,
+                                     'datetime':f"{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}",
+                                     'data_body':row_dict})
+            log_message(json_message)
+            
 
         count_enodeb=(len(table.find_all('tr')) - 1)
         return count_enodeb
