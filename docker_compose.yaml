@@ -1,0 +1,12 @@
+networks:
+  loki:
+services:
+  wall-e:
+    image: ubuntu:22.04
+    user: "1000"
+    volumes:
+    - /home/kelvin/wall-e:/home/kelvin/wall-e
+    entrypoint: ["/home/kelvin/wall-e/entrypoint.sh"]
+    restart: unless-stopped
+    networks:
+     - loki

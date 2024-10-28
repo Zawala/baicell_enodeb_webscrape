@@ -140,24 +140,29 @@ async def rinnegan():
     with open(inventory_file_path, 'r') as file:
         inventory_data = json.load(file)
 
-    browser = await launch(headless=True)
-    tasks = []
-    for site in inventory_data['sites']:
-        url = site['url']
-        username = site['username']
-        password = site['password']
-        tasks.append(scrape(browser, url, username, password))
+    try:
+        browser = await launch(headless=True, args=['--no-sandbox'])
+        tasks = []
+        for site in inventory_data['sites']:
+            url = site['url']
+            username = site['username']
+            password = site['password']
+            tasks.append(scrape(browser, url, username, password))
 
-    results = await asyncio.gather(*tasks, return_exceptions=True)
-    # Handle exceptions in results if necessary
+        results = await asyncio.gather(*tasks, return_exceptions=True)
+        # Handle exceptions in results if necessary
 
-    # Calculate the total count of enodeb
-    super_total_count_enodeb = sum(results)
+        # Calculate the total count of enodeb
+        super_total_count_enodeb = sum(results)
 
-    log_message(f'Total connected clients: {super_total_count_enodeb}')
-    # Close the browser after all tasks are completed
-    await browser.close()
-
+        log_message(f'Total connected clients: {super_total_count_enodeb}')
+        # Close the browser after all tasks are completed
+    except Exception as e:
+        log_warnings(f"Error launching browser: {e}")
+        return
+    finally:
+        await browser.close()
+   
 
 def run_rinnegan():
     asyncio.run(rinnegan())
